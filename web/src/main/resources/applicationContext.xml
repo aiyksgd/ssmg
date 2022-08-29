@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd">
+    <context:component-scan base-package="Dic"></context:component-scan>
+
+
+    <!-- 配置数据源 -->
+    <context:property-placeholder location="classpath:db.properties"/>
+    <!-- 配置数据源 -->
+    <!--	<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">-->
+    <!--		<property name="jndiName" value="aaaa"></property>-->
+    <!--		<property name="proxyInterface" value="javax.sql.DataSource"></property>-->
+    <!--		<property name="lookupOnStartup" value="false"></property>-->
+    <!--	</bean>-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="${user}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+        <property name="driverClass" value="${jdbc.driverClass}"></property>
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+    </bean>
+
+    <!--    <bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">-->
+    <!--        <property name="jndiName" value="aaaa"></property>-->
+    <!--        <property name="proxyInterface" value="javax.sql.DataSource"></property>-->
+    <!--        <property name="lookupOnStartup" value="false"></property>-->
+    <!--    </bean>-->
+
+
+    <!-- 事务管理器 -->
+    <bean id="dataSourceTransactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+
+    <!-- 基于注解的事务管理 -->
+    <tx:annotation-driven transaction-manager="dataSourceTransactionManager"/>
+
+
+    <!--  配置SqlSessionFactoryBean
+        Mybatis提供的: org.mybatis.spring.SqlSessionFactoryBean
+        MP提供的:com.baomidou.mybatisplus.spring.MybatisSqlSessionFactoryBean
+     -->
+    <!--    <bean id="MybatisAuditHandler" class="dic.util.MybatisAuditHandler"></bean>-->
+    <bean id="sqlSessionFactoryBean" class="com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean">
+        <!-- 数据源 -->
+        <property name="dataSource" ref="dataSource"></property>
+        <property name="configLocation" value="classpath:mybatis-config.xml"></property>
+
+
+        <!-- 注入全局MP策略配置 -->
+        <property name="globalConfig" ref="globalConfiguration"></property>
+
+        <property name="plugins">
+
+            <array>
+                <!--                <bean class="com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor">-->
+                <!--                </bean>-->
+                <bean class="com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor">
+                    <property name="interceptors">
+                        <list>
+                            <bean class="com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor"></bean>
+                        </list>
+                    </property>
+                </bean>
+            </array>
+
+
+        </property>
+
+
+    </bean>
+
+
+    <!-- 定义MybatisPlus的全局策略配置-->
+    <bean id="globalConfiguration" class="com.baomidou.mybatisplus.core.config.GlobalConfig">
+        <property name="dbConfig" ref="dbConfig"></property>
+
+        <!--        <property name="metaObjectHandler" ref="MybatisAuditHandler"></property>-->
+    </bean>
+
+
+    <bean id="dbConfig" class="com.baomidou.mybatisplus.core.config.GlobalConfig.DbConfig">
+        <property name="idType" value="AUTO"></property>
+        <property name="logicDeleteValue" value="-1"/>
+        <property name="logicNotDeleteValue" value="1"/>
+        <!--  <property name="tablePrefix" value="ssmp_"></property> -->
+
+    </bean>
+
+
+    <!--
+        配置mybatis 扫描mapper接口的路径
+     -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="Dic.mapper"></property>
+
+
+    </bean>
+
+
+</beans>
